@@ -8,18 +8,22 @@ import json
 import queries
 import pyjokes
 
-DATABASE_LOCATION = "/Users/nstornetta/Boothbot scraping/bot_commands/booth_classes.db"
+DATABASE_LOCATION = os.path.dirname(os.path.abspath(__file__)) + "/booth_classes.db" 
 
 def respond_to_command(command):
-    command_list = [word.lower() for word in command.split()]
-    if command_list[0] in ("help", "h", "?"):
-        return help_them_out()
-    elif "joke" in command_list:
-        return tell_joke()
-    elif "who are you" in command.lower():
-        return "I'm booth_bot! My objective is to help you find classes and bring them up for easy discussion here in Slack. At least until the Singularity... :wink:"
-    else:
-        return run_query_command(query_type=command_list[0], command_list=command_list)
+    try:
+        command_list = [word.lower() for word in command.split()]
+        if command_list[0] in ("help", "h", "?"):
+            return help_them_out()
+        elif "joke" in command_list:
+            return tell_joke()
+        elif "who are you" in command.lower():
+            return "I'm booth_bot! My objective is to help you find classes and bring them up for easy discussion here in Slack. At least until the Singularity... :wink:"
+        else:
+            return run_query_command(query_type=command_list[0], command_list=command_list)
+    except:
+        return "Hmm... I don't recognize that command. Have you tried using `@booth_bot help to see the things that I know how to do?"
+
 
 def tell_joke():
     return """Well, I wasn't programmed for that, but here goes:\n""" + pyjokes.get_joke()
@@ -65,11 +69,13 @@ def run_query_command(query_type, command_list):
         result = list(itertools.chain(*list(conn.execute(query))))
         if len(result) != 0:
             close_matches = difflib.get_close_matches(args_dict[query_type], result)
-        
-            return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}
+            if len(close_matches) > 0:        
+                return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}
             \t{close_matches}\nIf you ask me again with one of ^^^ those, I should be able to find some better results for you.
             """.format(this_or_these='one of these' if len(result) > 1 else 'this',
                        close_matches='\n\t'.join(close_matches))
+            else:
+                return """I couldn't find any courses to match `{command}`, try checking your query. If your query is correct, it may be that there are no sections offered that fit your description.""".format(command=' '.join(command_list))
         else:
             query = queries.by_colname_like(colname=colname_dict[query_type], colname_val=args_dict[query_type])
             result = list(conn.execute(query))
