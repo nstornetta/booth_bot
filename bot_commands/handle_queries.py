@@ -26,7 +26,7 @@ def tell_joke():
 
 def help_them_out():
     return """
-    Beep boop. I'm a bot and I'm here to 
+    Beep boop. I'm a bot and I'm here to make it just a little easier to learn about Fall classes you can take. 
     Here's are some example commands my creator (@nstornetta) has taught me so far:
     `@booth_bot help` -- Gives basic instructions on my commands
     `@booth_bot course Financial Accounting` -- Give basic info on the top-rated sections of Financial Accounting offered this term
