@@ -104,12 +104,12 @@ def get_interest(section_num):
 
 
 # ------------ Queries to update the database -------------- #
-def update_interested(section_num, amt=1):
+def update_interested(section_num, interested_array):
     return """
     update
         booth_classes
     set
-        registered_interest = registered_interest + {amt}
+        registered_interest = '{interested_array}'
     where
         section = '{section_num}'
-    """.format(section_num=section_num)
+    """.format(interested_array=interested_array, section_num=section_num)

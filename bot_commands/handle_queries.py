@@ -10,7 +10,7 @@ DATABASE_LOCATION = os.path.dirname(os.path.abspath(__file__)) + "/booth_classes
 
 
 # ----------- Methods to Determine Which Query and Logic to Apply ------------ #
-def respond_to_command(command):
+def respond_to_command(command, user):
     try:
         command_list = [word.lower() for word in command.split()]
         if command_list[0] in ("help", "h", "?"):
@@ -21,33 +21,36 @@ def respond_to_command(command):
             return "Beep boop. I'm booth_bot! My objective is to help you find classes and bring them up for easy \
             discussion here in Slack. At least until the Singularity... :wink:"
         else:
-            return run_query_command(query_type=command_list[0], command_list=command_list)
+            return run_query_command(query_type=command_list[0], command_list=command_list, user=user)
     except (IndexError, ValueError):
         return "Hmm... I don't recognize that command. Have you tried using `@booth_bot help` to see the things that \
         I know how to do?"
 
 
-def run_query_command(query_type, command_list):
+def run_query_command(query_type, command_list, user):
     args_dict = {"course": ' '.join(command_list[1:]),
                  "course_num": command_list[1],
-                 "instructor": ' '.join(command_list[1:])
+                 "instructor": ' '.join(command_list[1:]),
+                 "mark_interest": command_list[1],
+                 "remove_interest": command_list[1]
                  }
-
-    if query_type not in args_dict.keys():
-        raise ValueError
 
     colname_dict = {"course": "title",
                     "course_num": "course",
-                    "instructor": "instructor"
+                    "instructor": "instructor",
                     }
 
     conn = sqlite3.connect(DATABASE_LOCATION)
 
     try:
-        if query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
+        if query_type in ("mark_interest", "remove_interest"):
+            return update_interest(args_dict[query_type], query_type, connection=conn, user=user)
+        elif query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
             query = queries.instructor_last_name(instructor_val=args_dict[query_type])
         elif query_type in ("course", "course_num"):
             query = queries.by_colname_exact(colname=colname_dict[query_type], colname_val=args_dict[query_type])
+        else:
+            raise ValueError  # Query type has to match one of the predefined functions
         result = list(conn.execute(query))
         assert len(result) > 0
 
@@ -63,9 +66,10 @@ def run_query_command(query_type, command_list):
             if len(close_matches) > 0:
                 conn.close()
                 return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}
-            \t{close_matches}\nIf you ask me again with one of ^^^ those, I should be able to find some better results for you.
+                \t\t{close_matches}\n
+                If you ask me again with {this_or_these}, I should be able to find some better results for you.
             """.format(this_or_these='one of these' if len(result) > 1 else 'this',
-                       close_matches='\n\t'.join(close_matches))
+                       close_matches='\n\t\t'.join(close_matches))
             else:
                 conn.close()
                 return """I couldn't find any courses to match `{command}`, try checking your query. If your query is \
@@ -107,7 +111,7 @@ def help_them_out():
 
 def results_strings_list(query_result):
     """
-    Given a set of query results, convert it to a a list of formatted strings using those results.
+    Given a set of query results, convert it to a a list of formatted strings to be shown to user.
     """
     return ["""*{title} {section}. Taught by {instructor} on {time} at {location}.* \n\tRecommend rating: {recommend}. 
             \n\tHours per week: {hours}. \n\tInteresting rating: {interesting}.
@@ -120,3 +124,44 @@ def results_strings_list(query_result):
                        interesting=query_result[6],
                        recommend=x[7]) for x in query_result
             ]
+
+
+def update_interest(section_num, query_type, connection, user):
+    """
+    Let somebody register or de-register their interest in a specific class.
+    Note that this is a really terrible way to do this by pickling data in and out of sqlite, but for the moment we're
+    going with hacky and done is better than refactoring with sqlalchemy.
+    """
+
+    interested_array = list(connection.execute(queries.get_interest(section_num=section_num)))[0][0].split()
+
+    if query_type == "mark_interest" and user in interested_array:
+        return """You've already marked your interest. If you'd like to remove yourself as interested, try:\
+        \n`@booth_bot remove_interest {section_num}`""".format(section_num=section_num)
+
+    elif query_type == "mark_interest" and user not in interested_array:
+        interested_array.append(user)
+        query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
+        connection.execute(query)
+        connection.close()
+
+        return """You've been added to the list of students who are interested in {section_num}.\
+        \nThere are currently {num_interested} students who have registered their interest in that section."""\
+            .format(section_num=section_num, num_interested=str(len(interested_array)))
+
+    elif query_type == "remove_interest" and user not in interested_array:
+        return """You hadn't previously marked your interest. If you'd like to add yourself as interested, try:\
+        \n`@booth_bot mark_interest {section_num}`""".format(section_num=section_num)
+
+    elif query_type == "remove_interest" and user in interested_array:
+        interested_array.remove(user)
+        query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
+        connection.execute(query)
+        connection.close()
+
+        return """You've been removed from the list of students who are interested in {section_num}.\
+        \nThere are currently {num_interested} students who have registered their interest in that section."""\
+            .format(section_num=section_num, num_interested=str(len(interested_array)))
+
+    else:
+        raise ValueError

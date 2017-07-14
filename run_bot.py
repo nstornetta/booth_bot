@@ -24,8 +24,11 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip().lower(), \
-                       output['channel']
+                return (output['text'].split(AT_BOT)[1].strip().lower(),
+                        output['channel'],
+                        output['user']
+                        )
+
     return None, None
 
 
@@ -34,11 +37,13 @@ if __name__ == "__main__":
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
+            command, channel, user = parse_slack_output(slack_client.rtm_read())
             if command and channel:
-                response = handle_queries.respond_to_command(command)
-                slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
+                response = handle_queries.respond_to_command(command, user)
+                slack_client.api_call("chat.postMessage",
+                                      channel=channel,
+                                      text=response,
+                                      as_user=True)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
