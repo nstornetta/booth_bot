@@ -1,6 +1,7 @@
 """Set of queries for handling the basic interaction with the sqlite database"""
 
 
+# ------------ Queries to read from the database ------------ #
 def by_colname_exact(colname, colname_val):
     return """
     select 
@@ -90,3 +91,25 @@ def by_colname_like(colname, colname_val):
     recommend > 0
     limit 3
     """.format(where_clause=like_clause_constructor(colname=colname, colname_val=colname_val))
+
+
+def get_interest(section_num):
+    return """
+    select
+        registered_interest
+    from
+        booth_classes
+    where section = '{section_num}'
+    """.format(section_num=section_num)
+
+
+# ------------ Queries to update the database -------------- #
+def update_interested(section_num, amt=1):
+    return """
+    update
+        booth_classes
+    set
+        registered_interest = registered_interest + {amt}
+    where
+        section = '{section_num}'
+    """.format(section_num=section_num)
