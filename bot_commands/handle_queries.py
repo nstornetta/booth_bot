@@ -143,6 +143,7 @@ def update_interest(section_num, query_type, connection, user):
         interested_array.append(user)
         query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
         connection.execute(query)
+        connection.commit()
         connection.close()
 
         return """You've been added to the list of students who are interested in {section_num}.\
@@ -157,6 +158,7 @@ def update_interest(section_num, query_type, connection, user):
         interested_array.remove(user)
         query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
         connection.execute(query)
+        connection.commit()
         connection.close()
 
         return """You've been removed from the list of students who are interested in {section_num}.\
