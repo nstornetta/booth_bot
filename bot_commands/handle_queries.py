@@ -31,7 +31,8 @@ def run_query_command(query_type, command_list, user):
                  "course_num": command_list[1],
                  "instructor": ' '.join(command_list[1:]),
                  "mark_interest": command_list[1],
-                 "remove_interest": command_list[1]
+                 "remove_interest": command_list[1],
+                 "see_interested": command_list[1]
                  }
 
     colname_dict = {"course": "title",
@@ -44,6 +45,8 @@ def run_query_command(query_type, command_list, user):
     try:
         if query_type in ("mark_interest", "remove_interest"):
             return update_interest(args_dict[query_type], query_type, connection=conn, user=user)
+        elif query_type == "see_interested":
+            return get_num_interested(args_dict[query_type], connection=conn)
         elif query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
             query = queries.instructor_last_name(instructor_val=args_dict[query_type])
         elif query_type in ("course", "course_num"):
@@ -69,7 +72,7 @@ def run_query_command(query_type, command_list, user):
                        close_matches='\n\t\t'.join(close_matches))
             else:
                 conn.close()
-                return """I couldn't find any courses to match `{command}`, try checking your query. If your query is \
+                return """I couldn't find any courses to match `{command}`; try checking your query. If your query is \
                 correct, it may be that there are no sections offered that fit your description.""".format(
                     command=' '.join(command_list))
 
@@ -127,7 +130,7 @@ def results_strings_list(query_result):
 
 def get_num_interested(section_num, connection):
     interested_array = list(connection.execute(queries.get_interest(section_num=section_num)))
-    return """There are {num_interested} who have registered their interest in {section_num}"""\
+    return """There are {num_interested} students who have registered their interest in {section_num}"""\
         .format(num_interested=str(len(interested_array)), section_num=section_num)
 
 
