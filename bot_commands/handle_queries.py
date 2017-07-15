@@ -23,8 +23,7 @@ def respond_to_command(command, user):
         else:
             return run_query_command(query_type=command_list[0], command_list=command_list, user=user)
     except (IndexError, ValueError):
-        return "Hmm... I don't recognize that command. Have you tried using `@booth_bot help` to see the things that \
-        I know how to do?"
+        return "Hmm... I don't recognize that command. Have you tried using `@booth_bot help` to see the things that I know how to do?"
 
 
 def run_query_command(query_type, command_list, user):
@@ -65,9 +64,7 @@ def run_query_command(query_type, command_list, user):
             close_matches = difflib.get_close_matches(args_dict[query_type], result)
             if len(close_matches) > 0:
                 conn.close()
-                return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}
-                \t\t{close_matches}\n
-                If you ask me again with {this_or_these}, I should be able to find some better results for you.
+                return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}\n\t\t{close_matches}\nIf you ask me again with {this_or_these}, I should be able to find some better results for you.
             """.format(this_or_these='one of these' if len(result) > 1 else 'this',
                        close_matches='\n\t\t'.join(close_matches))
             else:
@@ -83,8 +80,7 @@ def run_query_command(query_type, command_list, user):
             result = list(conn.execute(query))
             if len(result) == 0:
                 conn.close()
-                return """I tried my hardest, but I couldn't seem to find what you were looking for.
-                Have you tried using the `@booth_both help` command to see what I can do?"""
+                return """I tried my hardest, but I couldn't seem to find what you were looking for.\nHave you tried using the `@booth_both help` command to see what I can do?"""
             else:
                 result_strings = results_strings_list(query_result=result)
                 conn.close()
@@ -106,6 +102,9 @@ def help_them_out():
     offered this term
     `@booth_bot course_num 30000` -- Give basic info on top-rated sections of course 30000 this term
     `@booth_bot instructor Kleymenova` -- Give basic info on the courses taught by Professor Kleymenova this term
+    `@booth_bot mark_interest 30000-01` -- Record yourself as being interested in enrolling in section 01 of course 30000
+    `@booth_bot remove_interest 30000-01` -- Remove yourself from being recorded as interested in enrolling in section 01 of course 30000
+    `@booth_bot see_interested 30000-01` -- See the number of people who have marked themselves as interested in enrolling in section 01 of course 30000 
     """
 
 
