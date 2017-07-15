@@ -126,6 +126,12 @@ def results_strings_list(query_result):
             ]
 
 
+def get_num_interested(section_num, connection):
+    interested_array = list(connection.execute(queries.get_interest(section_num=section_num)))
+    return """There are {num_interested} who have registered their interest in {section_num}"""\
+        .format(num_interested=str(len(interested_array)), section_num=section_num)
+
+
 def update_interest(section_num, query_type, connection, user):
     """
     Let somebody register or de-register their interest in a specific class.
