@@ -69,7 +69,7 @@ def run_query_command(query_type, command_list, user):
                 conn.close()
                 return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}\n\t\t{close_matches}\nIf you ask me again with {this_or_these}, I should be able to find some better results for you.
             """.format(this_or_these='one of these' if len(result) > 1 else 'this',
-                       close_matches='\n\t\t'.join(close_matches))
+                       close_matches='\n\t\t'.join([x.title() for x in close_matches]))
             else:
                 conn.close()
                 return """I couldn't find any courses to match `{command}`; try checking your query. If your query is \
