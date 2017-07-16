@@ -115,15 +115,14 @@ def results_strings_list(query_result):
     """
     Given a set of query results, convert it to a a list of formatted strings to be shown to user.
     """
-    return ["""*{title} {section}. Taught by {instructor} on {time} at {location}.* \n\tRecommend rating: {recommend}. 
-            \n\tHours per week: {hours}. \n\tInteresting rating: {interesting}.
-            """.format(title=query_result[0].title(),
-                       section=query_result[1],
-                       instructor=query_result[2].title(),
-                       time=query_result[3],
-                       location=query_result[4],
-                       hours=query_result[5],
-                       interesting=query_result[6],
+    return ["""*{title} {section}. Taught by {instructor} on {time} at {location}.* \n\tRecommend rating: {recommend}.\n\tHours per week: {hours}. \n\tInteresting rating: {interesting}.
+            """.format(title=x[0].title(),
+                       section=x[1],
+                       instructor=x[2].title(),
+                       time=x[3],
+                       location=x[4],
+                       hours=x[5],
+                       interesting=x[6],
                        recommend=x[7]) for x in query_result
             ]
 

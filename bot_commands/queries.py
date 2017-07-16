@@ -16,7 +16,7 @@ def by_colname_exact(colname, colname_val):
     from 
         booth_classes
     where 
-        {colname} = '{colname_val}'
+        lower({colname}) = lower('{colname_val}')
     order by
         recommend desc,
         interesting desc,
@@ -39,7 +39,7 @@ def instructor_last_name(instructor_val):
     from
         booth_classes
     where
-        substr(instructor, 1, instr(instructor, ',') - 1) = '{instructor_val}'
+        lower(substr(instructor, 1, instr(instructor, ',') - 1)) = lower('{instructor_val}')
     order by
         recommend desc,
         interesting desc,
@@ -68,7 +68,7 @@ def by_colname_like(colname, colname_val):
         Helper function for constructing like clause.
         """
         like_list = colname_val.split(' ')
-        like_unit = "{colname} like '%{word}%' and "
+        like_unit = "lower({colname}) like lower('%{word}%') and "
         like_clause = ""
         for word in like_list:
             like_clause += like_unit.format(colname=colname, word=word)
@@ -76,9 +76,9 @@ def by_colname_like(colname, colname_val):
     
     return """
     select
-        lower(title),
-        lower(section),
-        lower(instructor),
+        title,
+        section,
+        instructor,
         time,
         building,
         hours,

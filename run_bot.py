@@ -39,6 +39,7 @@ if __name__ == "__main__":
         while True:
             command, channel, user = parse_slack_output(slack_client.rtm_read())
             if command and channel:
+                print(command, channel, user)
                 response = handle_queries.respond_to_command(command, user)
                 slack_client.api_call("chat.postMessage",
                                       channel=channel,
