@@ -72,8 +72,7 @@ def run_query_command(query_type, command_list, user):
                        close_matches='\n\t\t'.join([x.title() for x in close_matches]))
             else:
                 conn.close()
-                return """I couldn't find any courses to match `{command}`; try checking your query. If your query is \
-                correct, it may be that there are no sections offered that fit your description.""".format(
+                return """I couldn't find any courses to match `{command}`; try checking your query. If your query is correct, it may be that there are no sections offered that fit your description.""".format(
                     command=' '.join(command_list))
 
         # As a last-ditch effort if there's no exact match or close spelling match, use a like-match for each word
