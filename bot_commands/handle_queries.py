@@ -21,12 +21,21 @@ def respond_to_command(command, user):
             return "Beep boop. I'm booth_bot! My objective is to help you find classes and bring them up for easy \
             discussion here in Slack. At least until the Singularity... :wink:"
         else:
-            return run_query_command(query_type=command_list[0], command_list=command_list, user=user)
+            conn = sqlite3.connect(DATABASE_LOCATION)
+            cursor = conn.cursor()
+            command_result = run_query_command(query_type=command_list[0],
+                                               command_list=command_list,
+                                               user=user,
+                                               cursor=cursor)
+            conn.commit()
+            conn.close()
+            return command_result
+
     except (IndexError, ValueError):
         return "Hmm... I don't recognize that command. Have you tried using `@booth_bot help` to see the things that I know how to do?"
 
 
-def run_query_command(query_type, command_list, user):
+def run_query_command(query_type, command_list, user, cursor):
     args_dict = {"course": ' '.join(command_list[1:]),
                  "course_num": command_list[1],
                  "instructor": ' '.join(command_list[1:]),
@@ -40,13 +49,11 @@ def run_query_command(query_type, command_list, user):
                     "instructor": "instructor",
                     }
 
-    conn = sqlite3.connect(DATABASE_LOCATION)
-
     try:
         if query_type in ("mark_interest", "remove_interest"):
-            return update_interest(args_dict[query_type], query_type, connection=conn, user=user)
+            return update_interest(args_dict[query_type], query_type, cursor=cursor, user=user)
         elif query_type == "see_interested":
-            return get_num_interested(args_dict[query_type], connection=conn)
+            return get_num_interested(args_dict[query_type], cursor=conn)
         elif query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
             query = queries.instructor_last_name(instructor_val=args_dict[query_type])
         elif query_type in ("course", "course_num"):
@@ -126,20 +133,20 @@ def results_strings_list(query_result):
             ]
 
 
-def get_num_interested(section_num, connection):
-    interested_array = list(connection.execute(queries.get_interest(section_num=section_num)))
+def get_num_interested(section_num, cursor):
+    interested_array = list(cursor.execute(queries.get_interest(section_num=section_num)))
     return """There are {num_interested} students who have registered their interest in {section_num}"""\
         .format(num_interested=str(len(interested_array)), section_num=section_num)
 
 
-def update_interest(section_num, query_type, connection, user):
+def update_interest(section_num, query_type, cursor, user):
     """
     Let somebody register or de-register their interest in a specific class.
     Note that this is a really terrible way to do this by pickling data in and out of sqlite, but for the moment we're
     going with hacky and done is better than refactoring with sqlalchemy.
     """
 
-    interested_array = list(connection.execute(queries.get_interest(section_num=section_num)))[0][0].split()
+    interested_array = list(cursor.execute(queries.get_interest(section_num=section_num)))[0][0].split()
 
     if query_type == "mark_interest" and user in interested_array:
         return """You've already marked your interest. If you'd like to remove yourself as interested, try:\
@@ -148,9 +155,7 @@ def update_interest(section_num, query_type, connection, user):
     elif query_type == "mark_interest" and user not in interested_array:
         interested_array.append(user)
         query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
-        connection.execute(query)
-        connection.commit()
-        connection.close()
+        cursor.execute(query)
 
         return """You've been added to the list of students who are interested in {section_num}.\
         \nThere are currently {num_interested} students who have registered their interest in that section."""\
@@ -163,9 +168,7 @@ def update_interest(section_num, query_type, connection, user):
     elif query_type == "remove_interest" and user in interested_array:
         interested_array.remove(user)
         query = queries.update_interested(section_num=section_num, interested_array=','.join(interested_array))
-        connection.execute(query)
-        connection.commit()
-        connection.close()
+        cursor.execute(query)
 
         return """You've been removed from the list of students who are interested in {section_num}.\
         \nThere are currently {num_interested} students who have registered their interest in that section."""\
