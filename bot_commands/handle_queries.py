@@ -129,7 +129,7 @@ def results_strings_list(query_result):
 
 
 def get_num_interested(section_num, cursor):
-    interested_array = list(cursor.execute(queries.get_interest(section_num=section_num)))
+    interested_array = list(cursor.execute(queries.get_interest(section_num=section_num)))[0][0].split()
     return """There are {num_interested} students who have registered their interest in {section_num}"""\
         .format(num_interested=str(len(interested_array)), section_num=section_num)
 
