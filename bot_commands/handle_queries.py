@@ -53,32 +53,29 @@ def run_query_command(query_type, command_list, user, cursor):
         if query_type in ("mark_interest", "remove_interest"):
             return update_interest(args_dict[query_type], query_type, cursor=cursor, user=user)
         elif query_type == "see_interested":
-            return get_num_interested(args_dict[query_type], cursor=conn)
+            return get_num_interested(args_dict[query_type], cursor=cursor)
         elif query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
             query = queries.instructor_last_name(instructor_val=args_dict[query_type])
         elif query_type in ("course", "course_num"):
             query = queries.by_colname_exact(colname=colname_dict[query_type], colname_val=args_dict[query_type])
         else:
             raise ValueError  # Query type has to match one of the predefined functions
-        result = list(conn.execute(query))
+        result = list(cursor.execute(query))
         assert len(result) > 0
 
-        result_strings = results_strings_list(query_result=result)
-        conn.close()
+        result_strings = results_strings_list(query_result=result) 
         return """Here's what I found:\n{results}""".format(results='\n'.join(result_strings))
 
     except AssertionError:  # i.e., if no results are returned when using exact match
         query = queries.by_colname_distinct(colname=colname_dict[query_type])
-        result = list(itertools.chain(*list(conn.execute(query))))
+        result = list(itertools.chain(*list(cursor.execute(query))))
         if len(result) != 0:
             close_matches = difflib.get_close_matches(args_dict[query_type], result)
             if len(close_matches) > 0:
-                conn.close()
                 return """I couldn't find anything matching that exact description. Perhaps you meant {this_or_these}\n\t\t{close_matches}\nIf you ask me again with {this_or_these}, I should be able to find some better results for you.
             """.format(this_or_these='one of these' if len(result) > 1 else 'this',
                        close_matches='\n\t\t'.join([x.title() for x in close_matches]))
-            else:
-                conn.close()
+            else: 
                 return """I couldn't find any courses to match `{command}`; try checking your query. If your query is correct, it may be that there are no sections offered that fit your description.""".format(
                     command=' '.join(command_list))
 
@@ -86,13 +83,11 @@ def run_query_command(query_type, command_list, user, cursor):
         # (e.g., "Accounting" -> "Financial Accounting", a potentially common mistake)
         else:
             query = queries.by_colname_like(colname=colname_dict[query_type], colname_val=args_dict[query_type])
-            result = list(conn.execute(query))
+            result = list(cursor.execute(query))
             if len(result) == 0:
-                conn.close()
                 return """I tried my hardest, but I couldn't seem to find what you were looking for.\nHave you tried using the `@booth_both help` command to see what I can do?"""
             else:
-                result_strings = results_strings_list(query_result=result)
-                conn.close()
+                result_strings = results_strings_list(query_result=result) 
                 return """I'm not quite sure this is what you're looking for, but here's what I found:
                 {results}""".format(results='\n'.join(result_strings))
 
