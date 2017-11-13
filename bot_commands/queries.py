@@ -91,25 +91,3 @@ def by_colname_like(colname, colname_val):
     recommend > 0
     limit 3
     """.format(where_clause=like_clause_constructor(colname=colname, colname_val=colname_val), table_name=TABLE_NAME)
-
-
-def get_interest(section_num):
-    return """
-    select
-        registered_interest
-    from
-        {table_name}
-    where section = '{section_num}'
-    """.format(section_num=section_num, table_name=TABLE_NAME)
-
-
-# ------------ Queries to update the database -------------- #
-def update_interested(section_num, interested_array):
-    return """
-    update
-        {table_name}
-    set
-        registered_interest = '{interested_array}'
-    where
-        section = '{section_num}'
-    """.format(interested_array=interested_array, section_num=section_num, table_name=TABLE_NAME)

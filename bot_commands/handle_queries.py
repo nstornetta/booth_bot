@@ -39,9 +39,6 @@ def run_query_command(query_type, command_list, user, cursor):
     args_dict = {"course": ' '.join(command_list[1:]),
                  "course_num": command_list[1],
                  "instructor": ' '.join(command_list[1:]),
-                 "mark_interest": command_list[1],
-                 "remove_interest": command_list[1],
-                 "see_interested": command_list[1]
                  }
 
     colname_dict = {"course": "title",
@@ -50,11 +47,7 @@ def run_query_command(query_type, command_list, user, cursor):
                     }
 
     try:
-        if query_type in ("mark_interest", "remove_interest"):
-            return update_interest(args_dict[query_type], query_type, cursor=cursor, user=user)
-        elif query_type == "see_interested":
-            return get_num_interested(args_dict[query_type], cursor=cursor)
-        elif query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
+        if query_type == "instructor":  # Handle instructor case separately since the logic is just slightly different
             query = queries.instructor_last_name(instructor_val=args_dict[query_type])
         elif query_type in ("course", "course_num"):
             query = queries.by_colname_exact(colname=colname_dict[query_type], colname_val=args_dict[query_type])
@@ -106,9 +99,6 @@ def help_them_out():
     offered this term
     `@booth_bot course_num 30000` -- Give basic info on top-rated sections of course 30000 this term
     `@booth_bot instructor Kleymenova` -- Give basic info on the courses taught by Professor Kleymenova this term
-    `@booth_bot mark_interest 30000-01` -- Record yourself as being interested in enrolling in section 01 of course 30000
-    `@booth_bot remove_interest 30000-01` -- Remove yourself from being recorded as interested in enrolling in section 01 of course 30000
-    `@booth_bot see_interested 30000-01` -- See the number of people who have marked themselves as interested in enrolling in section 01 of course 30000 
     """
 
 
