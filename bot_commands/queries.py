@@ -1,5 +1,5 @@
 """Set of queries for handling the basic interaction with the sqlite database"""
-
+TABLE_NAME="winter_2018"
 
 # ------------ Queries to read from the database ------------ #
 def by_colname_exact(colname, colname_val):
@@ -14,7 +14,7 @@ def by_colname_exact(colname, colname_val):
         interesting,
         recommend
     from 
-        booth_classes
+        {table_name}
     where 
         lower({colname}) = lower('{colname_val}')
     order by
@@ -22,7 +22,7 @@ def by_colname_exact(colname, colname_val):
         interesting desc,
         hours asc
     limit 5
-    """.format(colname=colname, colname_val=colname_val)
+    """.format(colname=colname, colname_val=colname_val, table_name=TABLE_NAME)
 
 
 def instructor_last_name(instructor_val):
@@ -37,7 +37,7 @@ def instructor_last_name(instructor_val):
         interesting,
         recommend
     from
-        booth_classes
+        {table_name}
     where
         lower(substr(instructor, 1, instr(instructor, ',') - 1)) = lower('{instructor_val}')
     order by
@@ -45,7 +45,7 @@ def instructor_last_name(instructor_val):
         interesting desc,
         hours asc
     limit 5
-    """.format(instructor_val=instructor_val)
+    """.format(instructor_val=instructor_val, table_name=TABLE_NAME)
 
                
 def by_colname_distinct(colname):
@@ -53,8 +53,8 @@ def by_colname_distinct(colname):
     select 
         distinct {colname}
     from
-        booth_classes
-    """.format(colname=colname)
+        {table_name}
+    """.format(colname=colname, table_name=TABLE_NAME)
 
 
 def by_colname_like(colname, colname_val):
@@ -85,12 +85,12 @@ def by_colname_like(colname, colname_val):
         interesting,
         recommend
     from
-        booth_classes
+        {table_name}
     where
         {where_clause}
     recommend > 0
     limit 3
-    """.format(where_clause=like_clause_constructor(colname=colname, colname_val=colname_val))
+    """.format(where_clause=like_clause_constructor(colname=colname, colname_val=colname_val), table_name=TABLE_NAME)
 
 
 def get_interest(section_num):
@@ -98,18 +98,18 @@ def get_interest(section_num):
     select
         registered_interest
     from
-        booth_classes
+        {table_name}
     where section = '{section_num}'
-    """.format(section_num=section_num)
+    """.format(section_num=section_num, table_name=TABLE_NAME)
 
 
 # ------------ Queries to update the database -------------- #
 def update_interested(section_num, interested_array):
     return """
     update
-        booth_classes
+        {table_name}
     set
         registered_interest = '{interested_array}'
     where
         section = '{section_num}'
-    """.format(interested_array=interested_array, section_num=section_num)
+    """.format(interested_array=interested_array, section_num=section_num, table_name=TABLE_NAME)
